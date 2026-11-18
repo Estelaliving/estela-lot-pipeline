@@ -773,7 +773,7 @@ const STAGES = [
 // ── NEW-LOT EMAIL (Power Automate) ───────────────────────────────────────────
 // Paste the Power Automate "When an HTTP request is received" URL here.
 // The recipient (rcelis@estelaliving.com) is set inside the flow, not here.
-const NEW_LOT_FLOW_URL = '';
+const NEW_LOT_FLOW_URL = 'https://default9aecb9698ceb4c3eba5a53266a072f.e8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/3f8d2dd85ae14f45b037f72a9afb4de5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=HLwCTlmxZghItFZJ1oVqd9rXWYwuGRTrqUMMlGBtkf4';
 const NEW_LOT_NOTIFY_STAGE = 'Rafael Initial Approval';
 function notifyNewLot(deal){
   if(!NEW_LOT_FLOW_URL || deal.stage!==NEW_LOT_NOTIFY_STAGE) return;
