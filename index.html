@@ -770,6 +770,29 @@ const STAGES = [
   {key:'Closed / Purchased',    cls:'closed', hdr:'sh-closed', badge:'background:#CCFBF1;color:#0F766E'},
   {key:'Cancelled',             cls:'cancelled',hdr:'sh-cancelled',badge:'background:#F3F4F6;color:#6B7280'},
 ];
+// ── NEW-LOT EMAIL (Power Automate) ───────────────────────────────────────────
+// Paste the Power Automate "When an HTTP request is received" URL here.
+// The recipient (rcelis@estelaliving.com) is set inside the flow, not here.
+const NEW_LOT_FLOW_URL = 'https://default9aecb9698ceb4c3eba5a53266a072f.e8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/3f8d2dd85ae14f45b037f72a9afb4de5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=HLwCTlmxZghItFZJ1oVqd9rXWYwuGRTrqUMMlGBtkf4';
+const NEW_LOT_NOTIFY_STAGE = 'Rafael Initial Approval';
+function notifyNewLot(deal){
+  if(!NEW_LOT_FLOW_URL || deal.stage!==NEW_LOT_NOTIFY_STAGE) return;
+  const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const rows=[
+    ['Address',deal.address],['Parcel',deal.parcel],['Amount',deal.amount?fm(deal.amount):''],
+    ['Lot premium',deal.lotPremium?fm(deal.lotPremium):''],['Lot size',deal.lotSize],['SPV',deal.spv],
+    ['Development',deal.development?devLabel(deal.development):''],['Target close',deal.close],
+    ['Map',deal.mapLink],['Notes',deal.notes]
+  ].filter(r=>r[1]);
+  const html='<p>A new lot was added to <b>'+NEW_LOT_NOTIFY_STAGE+'</b> in the Estela Deal Pipeline.</p>'
+    +'<table cellpadding="6" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;">'
+    +rows.map(r=>'<tr><td style="color:#6B7280;border-bottom:1px solid #eee;">'+r[0]+'</td><td style="border-bottom:1px solid #eee;"><b>'+esc(r[1]).replace(/\n/g,'<br>')+'</b></td></tr>').join('')
+    +'</table><p><a href="'+esc(location.href.split('#')[0])+'">Open the Deal Pipeline</a></p>';
+  const payload={subject:'New lot for approval: '+deal.address,html,address:deal.address,amount:deal.amount||0,spv:deal.spv||'',close:deal.close||'',addedAt:new Date().toISOString()};
+  // text/plain + no-cors = a "simple" request, so the browser skips the CORS preflight.
+  fetch(NEW_LOT_FLOW_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .catch(e=>{console.warn('New-lot email failed',e);showToast('Lot saved, but the email to Rafael could not be sent.','red');});
+}
 const SPV_LIST = ['Estela Living LLC','Estela Specs 1 LLC','Estela Specs 2 LLC','Estela Specs 3 LLC','Estela Specs 4 LLC','Estela Specs 6 LLC','Estela Specs 7 LLC','Estela Specs 9 LLC'];
 
 // ── TAB SWITCHING ────────────────────────────────────────────────────────────
@@ -2349,6 +2372,7 @@ async function saveDeal(silent){
     }
   }
   saveDeals();render();
+  if(!existing) notifyNewLot(deal);
   if(!silent){closeOverlay('editOverlay');showToast('Deal saved!','green');}
   if(deal.stage==='Cancelled'&&oldStage!=='Cancelled') moveFolderToCancelled(deal);
   if(deal.stage==='Closed / Purchased'&&oldStage!=='Closed / Purchased') moveFolderToClosed(deal);
