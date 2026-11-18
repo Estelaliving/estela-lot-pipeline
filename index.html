@@ -134,12 +134,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-bg);color:var
 .history-label{font-size:12px;font-weight:600;color:var(--text);}
 .history-from{font-size:10px;color:var(--text-light);}
 .stage-body{background:#fff;border:1.5px solid var(--gray-border);border-top:none;border-radius:0 0 10px 10px;padding:8px;display:flex;flex-direction:column;gap:7px;min-height:60px;box-shadow:0 2px 8px rgba(0,0,0,.05);max-height:calc(100vh - 255px);overflow-y:auto;}
-.sh-offer{background:var(--blue-mid);}.sh-escrow{background:var(--orange);}.sh-dd{background:var(--red-dark);}.sh-ctc{background:#7C3AED;}.sh-permit{background:var(--green-dark);}.sh-closed{background:var(--teal-dark);}.sh-cancelled{background:#6B7280;}
+.sh-rafael{background:#BE185D;}.sh-offer{background:var(--blue-mid);}.sh-escrow{background:var(--orange);}.sh-dd{background:var(--red-dark);}.sh-ctc{background:#7C3AED;}.sh-permit{background:var(--green-dark);}.sh-closed{background:var(--teal-dark);}.sh-cancelled{background:#6B7280;}
 /* CARD */
 .deal-card{background:#fff;border:1.5px solid var(--gray-border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s,transform .1s;position:relative;overflow:hidden;flex-shrink:0;}
 .deal-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px);}
 .deal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:8px 0 0 8px;}
-.offer::before{background:var(--blue-mid);}.escrow::before{background:var(--orange);}.dd::before{background:var(--red-dark);}.ctc::before{background:#7C3AED;}.permit::before{background:var(--green-dark);}.closed::before{background:var(--teal-dark);}.cancelled::before{background:#6B7280;}
+.rafael::before{background:#BE185D;}.offer::before{background:var(--blue-mid);}.escrow::before{background:var(--orange);}.dd::before{background:var(--red-dark);}.ctc::before{background:#7C3AED;}.permit::before{background:var(--green-dark);}.closed::before{background:var(--teal-dark);}.cancelled::before{background:#6B7280;}
 .card-alert-note{font-size:10px;color:var(--red-alert);font-weight:600;margin-bottom:3px;}
 .card-address{font-size:12px;font-weight:600;margin-bottom:5px;line-height:1.4;padding-right:48px;}
 .card-amount{font-size:16px;font-weight:700;color:var(--blue-dark);margin-bottom:6px;}
@@ -182,6 +182,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-bg);color:var
 .stage-pill{padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .15s;opacity:.55;background:#F3F4F6;color:var(--text);}
 .stage-pill:hover{opacity:.8;}
 .stage-pill.active{opacity:1;border-color:currentColor;transform:scale(1.04);}
+.stage-pill[data-stage="Rafael Initial Approval"].active{background:#FCE7F3;color:#9D174D;}
 .stage-pill[data-stage="Offer Letter"].active{background:#DBEAFE;color:#1D4ED8;}
 .stage-pill[data-stage="Under Contract (Escrow)"].active{background:#FEF3C7;color:#92400E;}
 .stage-pill[data-stage="Due Diligences"].active{background:#FEE2E2;color:#991B1B;}
@@ -471,6 +472,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-bg);color:var
 
       <!-- STAGE SELECTOR — prominent pill bar -->
       <div class="stage-bar" id="stagePillBar">
+        <span class="stage-pill" data-stage="Rafael Initial Approval" onclick="pickStage(this)">Rafael Initial Approval</span>
         <span class="stage-pill" data-stage="Offer Letter" onclick="pickStage(this)">Offer Letter</span>
         <span class="stage-pill" data-stage="Under Contract (Escrow)" onclick="pickStage(this)">Under Contract</span>
         <span class="stage-pill" data-stage="Due Diligences" onclick="pickStage(this)">Due Diligence</span>
@@ -481,7 +483,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-bg);color:var
       </div>
       <!-- Hidden select keeps saveDeal() working unchanged -->
       <select class="form-select" id="f_stage" style="display:none;">
-        <option>Offer Letter</option><option>Under Contract (Escrow)</option><option>Due Diligences</option><option>Clear to Close</option><option>Permitting</option><option>Closed / Purchased</option><option>Cancelled</option>
+        <option>Rafael Initial Approval</option><option>Offer Letter</option><option>Under Contract (Escrow)</option><option>Due Diligences</option><option>Clear to Close</option><option>Permitting</option><option>Closed / Purchased</option><option>Cancelled</option>
       </select>
 
       <!-- SECTION: Property Info -->
@@ -759,6 +761,7 @@ const fbRef = firebase.database().ref('deals');
 let fbReady = false;
 const IDB_DB = 'estelaFS'; const IDB_STORE = 'handles';
 const STAGES = [
+  {key:'Rafael Initial Approval',cls:'rafael', hdr:'sh-rafael', badge:'background:#FCE7F3;color:#9D174D'},
   {key:'Offer Letter',          cls:'offer',  hdr:'sh-offer',  badge:'background:#DBEAFE;color:#1D4ED8'},
   {key:'Under Contract (Escrow)',cls:'escrow', hdr:'sh-escrow', badge:'background:#FEF3C7;color:#92400E'},
   {key:'Due Diligences',        cls:'dd',     hdr:'sh-dd',     badge:'background:#FEE2E2;color:#991B1B'},
@@ -1526,7 +1529,7 @@ async function createDealFolder(dealAddress){
     }
   }catch(e){}
 }
-const ACTIVE_FOLDER_STAGES=['Offer Letter','Under Contract (Escrow)','Due Diligences','Clear to Close','Permitting'];
+const ACTIVE_FOLDER_STAGES=['Rafael Initial Approval','Offer Letter','Under Contract (Escrow)','Due Diligences','Clear to Close','Permitting'];
 async function syncAllDealFolders(){
   if(!docsFolderHandle) return;
   let created=0;
@@ -1942,7 +1945,7 @@ function openAddDeal(){
   document.getElementById('autoSaveStatus').style.display='none';
   const bar=document.getElementById('analyzeBar');if(bar){bar.style.display='none';}
   const res=document.getElementById('analyzeResult');if(res){res.style.display='none';}
-  clearForm();syncStagePills('Offer Letter');updateAttachBadge();updateFolderHint('');populateCatPicker();
+  clearForm();syncStagePills('Rafael Initial Approval');updateAttachBadge();updateFolderHint('');populateCatPicker();
   const p=document.getElementById('attachCatPick'); if(p)p.value=pendingCategoryPick;
   renderAttachList();
   // Expand all sections for new deal, hide history and site eval
@@ -2080,7 +2083,7 @@ function clearForm(){
   ['f_sellerVerification','f_cleanTitle','f_lotWalkthrough','f_managerApproval'].forEach(id=>{document.getElementById(id).checked=false;});
   const mb=document.getElementById('f_mapBtn');if(mb){mb.style.display='none';mb.href='#';}
   document.getElementById('f_spv').value='';document.getElementById('f_escrowPaid').value='false';document.getElementById('f_orientation').value='';
-  document.getElementById('f_stage').value='Offer Letter';document.getElementById('f_spv_custom').style.display='none';
+  document.getElementById('f_stage').value='Rafael Initial Approval';document.getElementById('f_spv_custom').style.display='none';
   document.getElementById('f_development').value='';
   const msD=document.getElementById('f_msHouseDisplay');if(msD)msD.textContent='—';
   const msB=document.getElementById('btnAssignMs');if(msB){msB.textContent='Assign #';msB.disabled=false;}
